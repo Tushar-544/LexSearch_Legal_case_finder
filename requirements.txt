@@ -1,0 +1,25 @@
+# Legal Case Finder — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Embeddings + FAISS
+sentence-transformers>=2.3.0
+faiss-cpu>=1.7.4
+
+# HuggingFace LLMs (summarization + generation)
+transformers>=4.35.0
+torch>=2.0.0           # CPU version; use torch+cu118 for GPU
+accelerate>=0.24.0
+
+# PDF processing (install at least one)
+pymupdf>=1.23.0        # PyMuPDF  (recommended — faster)
+pdfplumber>=0.10.0     # alternative
+
+# HTTP requests
+requests>=2.31.0
+
+# Backend / misc
+tqdm>=4.66.0
