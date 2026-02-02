@@ -67,3 +67,72 @@ except Exception as e:
     def _generate(prompt: str) -> str:  # type: ignore[misc]
         marker = "Context:\n"
         idx = prompt.find(marker)
+        snippet = prompt[idx + len(marker) :] if idx != -1 else prompt
+        return snippet[:500].strip() + " [extracted]"
+
+    def _summarize_text(text: str) -> str:
+        return text[:300] + "..."
+
+
+def _build_prompt(query: str, chunks: list[dict]) -> str:
+    """Combine retrieved chunks + PDF summaries into a single prompt."""
+    context_parts: list[str] = []
+
+    seen_cases: set[str] = set()
+    for i, chunk in enumerate(chunks, 1):
+        cid = chunk.get("case_id", "")
+        text = chunk.get("text", "")
+        summary = chunk.get("pdf_summary", "")
+
+        pet = chunk.get("petitioner") or "Unknown"
+        res = chunk.get("respondent") or "Unknown"
+        judge = chunk.get("judge") or "Unknown"
+        date = chunk.get("decision_date") or "Unknown"
+
+        block = f"[Case {i}] Case ID: {cid}\n"
+        block += f"Date: {date}\n"
+        block += f"Petitioner: {pet}\n"
+        block += f"Respondent: {res}\n"
+        block += f"Judge: {judge}\n"
+        block += f"Excerpt: {text}\n"
+
+        if summary and cid not in seen_cases:
+            block += f"PDF Summary: {summary}\n"
+            seen_cases.add(cid)
+
+        context_parts.append(block)
+
+    context = "\n---\n".join(context_parts)
+
+    prompt = (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"Context:\n{context}\n\n"
+        f"Question: {query}\n\n"
+        f"Answer:"
+    )
+    return prompt
+
+
+def _format_sources(chunks: list[dict]) -> list[dict]:
+    """Return a deduplicated list of source case metadata."""
+    seen: set[str] = set()
+    sources: list[dict] = []
+    for chunk in chunks:
+        cid = chunk.get("case_id", "")
+        if cid in seen:
+            continue
+        seen.add(cid)
+
+        pet = chunk.get("petitioner")
+        res = chunk.get("respondent")
+
+        # Build a human-readable case title
+        if pet and res:
+            case_title = f"{pet} v. {res}"
+        elif pet:
+            case_title = pet
+        else:
+            case_title = chunk.get("case_no") or cid or "Unknown Case"
+
+        sources.append(
+            {
