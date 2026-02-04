@@ -34,3 +34,39 @@ app.use(express.json());
 // ── Health check ──────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// ── Main search endpoint ───────────────────────────────────────────────────
+app.post("/api/search", (req, res) => {
+  const {
+    query = "",
+    k = 5,
+    filters = null,
+    searchMode = "semantic",
+    history = [],
+    rewrite = false,
+  } = req.body;
+
+  if (!query.trim()) {
+    return res.status(400).json({ error: "Query must not be empty." });
+  }
+
+  const args = ["src/run_rag.py", "--query", query, "--k", String(k)];
+
+  // Pass filters as JSON string
+  if (filters && typeof filters === "object" && Object.keys(filters).length > 0) {
+    args.push("--filters", JSON.stringify(filters));
+  }
+
+  // Pass search mode
+  if (["semantic", "keyword", "hybrid"].includes(searchMode)) {
+    args.push("--search-mode", searchMode);
+  }
+
+  // Enable query rewriting
+  if (rewrite) {
+    args.push("--rewrite");
+  }
+
+  const py = spawn("python", args, {
+    cwd: ROOT,
