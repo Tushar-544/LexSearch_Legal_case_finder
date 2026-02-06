@@ -70,3 +70,40 @@ app.post("/api/search", (req, res) => {
 
   const py = spawn("python", args, {
     cwd: ROOT,
+    env: { ...process.env, PYTHONUNBUFFERED: "1" },
+  });
+
+  let stdout = "";
+  let stderr = "";
+
+  py.stdout.on("data", (d) => (stdout += d.toString()));
+  py.stderr.on("data", (d) => (stderr += d.toString()));
+
+  py.on("close", (code) => {
+    if (code !== 0) {
+      console.error("[Python stderr]", stderr);
+      return res.status(500).json({
+        error: "RAG pipeline failed.",
+        detail: stderr.slice(-500),
+      });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      return res.json(result);
+    } catch {
+      console.error("[Parse error] stdout:", stdout);
+      return res.status(500).json({ error: "Failed to parse Python output." });
+    }
+  });
+
+  py.on("error", (err) => {
+    console.error("[Spawn error]", err);
+    res.status(500).json({ error: "Could not start Python process.", detail: err.message });
+  });
+});
+
+// ── Summarize endpoint ─────────────────────────────────────────────────────
+app.post("/api/summarize", (req, res) => {
+  const { text = "" } = req.body;
+
