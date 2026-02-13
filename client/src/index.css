@@ -349,3 +349,120 @@ h1, h2, h3, .logo-name {
 
 .lex-error-alert {
   background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 16px 24px;
+  color: #fca5a5;
+  margin-bottom: 20px;
+}
+
+.lex-footer-area {
+  padding: 30px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║         CHAT INTERFACE STYLES                                ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.chat-messages-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Chat Empty State ── */
+.chat-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+
+.chat-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.chat-empty-state p {
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+/* ── Messages ── */
+.chat-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: fadeSlideIn 0.35s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chat-user {
+  flex-direction: row-reverse;
+}
+
+.chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.chat-user .chat-avatar {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--accent);
+}
+
+.chat-bubble-wrapper {
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-user .chat-bubble-wrapper {
+  align-items: flex-end;
+}
+
+.chat-bubble {
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  position: relative;
+}
+
+.chat-user .chat-bubble {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.08) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-bottom-right-radius: 4px;
+  color: var(--text-main);
+}
+

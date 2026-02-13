@@ -150,3 +150,54 @@ function SourceCard({ src, idx }: { src: Source; idx: number }) {
         )}
 
         <a
+          className="footer-btn alt-btn"
+          href={getKanoonLink(src)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          🔍 Search Alternative
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App Component ───────────────────────────────────────────────────────
+export default function App() {
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentQuery, setCurrentQuery] = useState("");
+  const [allSources, setAllSources] = useState<Source[]>([]);
+
+  // Bookmarks
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [bookmarks, setBookmarks] = useState<Source[]>(loadBookmarks);
+
+  // Filters
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+
+  // Comparison
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonCases, setComparisonCases] = useState<Source[]>([]);
+
+  // Timeline
+  const [showTimeline, setShowTimeline] = useState(false);
+
+  // Search Mode
+  const [searchMode, setSearchMode] = useState<SearchMode>("semantic");
+
+  // Sync bookmarks to localStorage
+  useEffect(() => {
+    saveBookmarks(bookmarks);
+  }, [bookmarks]);
+
+  const toggleBookmark = useCallback(
+    (src: Source) => {
+      setBookmarks((prev) => {
+        const exists = prev.some((b) => b.case_id === src.case_id);
+        if (exists) return prev.filter((b) => b.case_id !== src.case_id);
+        return [...prev, src];
+      });
+    },
+    []
