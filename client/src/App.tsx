@@ -201,3 +201,54 @@ export default function App() {
       });
     },
     []
+  );
+
+  // Handle summarize requests from chat
+  const handleSummarize = useCallback(async (text: string): Promise<string> => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await resp.json();
+      return data.summary || "Failed to generate summary.";
+    } catch {
+      return "Error connecting to summarizer.";
+    }
+  }, []);
+
+  // Build filter object for API (only non-empty values)
+  const getApiFilters = useCallback(() => {
+    const f: Record<string, string> = {};
+    if (filters.yearMin) f.yearMin = filters.yearMin;
+    if (filters.yearMax) f.yearMax = filters.yearMax;
+    if (filters.judge.trim()) f.judge = filters.judge.trim();
+    if (filters.minScore) f.minScore = filters.minScore;
+    return Object.keys(f).length > 0 ? f : null;
+  }, [filters]);
+
+  // Main search handler — adds messages to chat
+  const handleSearch = useCallback(
+    async (queryText: string) => {
+      const q = queryText.trim();
+      if (!q || loading) return;
+
+      setCurrentQuery(q);
+
+      // Add user message
+      const userMsg: ChatMsg = {
+        id: genId(),
+        role: "user",
+        content: q,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setLoading(true);
+
+      try {
+        const body: Record<string, unknown> = { query: q, k: 5 };
+        const apiFilters = getApiFilters();
+        if (apiFilters) body.filters = apiFilters;
+        if (searchMode !== "semantic") body.searchMode = searchMode;
+
