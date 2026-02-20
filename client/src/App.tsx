@@ -252,3 +252,54 @@ export default function App() {
         if (apiFilters) body.filters = apiFilters;
         if (searchMode !== "semantic") body.searchMode = searchMode;
 
+        const resp = await fetch(`${API_BASE}/api/search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+        const data: SearchResult = await resp.json();
+
+        // Track all sources for export/comparison
+        if (data.sources) {
+          setAllSources((prev) => {
+            const existing = new Set(prev.map((s) => s.case_id));
+            const newOnes = data.sources.filter((s) => !existing.has(s.case_id));
+            return [...prev, ...newOnes];
+          });
+        }
+
+        const aiMsg: ChatMsg = {
+          id: genId(),
+          role: "ai",
+          content: data.answer,
+          sources: data.sources,
+          suggestions: data.suggestions,
+          key_points: data.key_points,
+          summary: data.summary,
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      } catch (err: unknown) {
+        const errMsg: ChatMsg = {
+          id: genId(),
+          role: "ai",
+          content: `❌ Error: ${err instanceof Error ? err.message : "Network error. Please check if the backend is running."}`,
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, errMsg]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loading, getApiFilters, searchMode]
+  );
+
+  // Voice search callback
+  const handleVoiceResult = useCallback(
+    (text: string) => {
+      handleSearch(text);
+    },
+    [handleSearch]
