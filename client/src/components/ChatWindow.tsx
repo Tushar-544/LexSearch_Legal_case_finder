@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ChatWindow.tsx
  * ──────────────
  * Chat container with message list and input bar.
@@ -73,3 +73,40 @@ export default function ChatWindow({
                   <span></span>
                 </div>
                 <span className="typing-text">Analyzing legal database...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input bar */}
+      <div className="chat-input-bar">
+        <div className="chat-input-field">
+          <span className="chat-input-icon">⚖️</span>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Ask a legal question..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            disabled={loading}
+          />
+          <button
+            className="chat-send-btn"
+            onClick={handleSubmit}
+            disabled={loading || !input.trim()}
+          >
+            {loading ? (
+              <span className="send-spinner">⏳</span>
+            ) : (
+              <span>Send ➤</span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
