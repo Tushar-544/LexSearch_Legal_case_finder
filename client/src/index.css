@@ -700,3 +700,120 @@ h1, h2, h3, .logo-name {
 .chat-send-btn {
   background: var(--accent);
   color: black;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.send-spinner {
+  animation: spin_icon 1s linear infinite;
+  display: inline-block;
+}
+
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║         CONFIDENCE BADGES                                    ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+
+.conf-score-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.conf-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.conf-high {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.conf-medium {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.conf-low {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║         KEYWORD HIGHLIGHTING                                 ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+
+.kw-highlight {
+  background: rgba(212, 175, 55, 0.25);
+  color: var(--accent);
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* ╔═══════════════════════════════════════════════════════════════╗
+   ║         BOOKMARKS PANEL                                      ║
+   ╚═══════════════════════════════════════════════════════════════╝ */
+
+.bookmarks-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 380px;
+  max-width: 90vw;
+  height: 100vh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s ease-out;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.bookmarks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bookmarks-header h3 {
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.close-panel-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
