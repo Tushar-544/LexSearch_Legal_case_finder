@@ -303,3 +303,54 @@ export default function App() {
       handleSearch(text);
     },
     [handleSearch]
+  );
+
+  const hasActiveFilters = Object.values(filters).some((v) => v.trim() !== "");
+
+  const suggestionCases = [
+    "Grounds for Anticipatory Bail",
+    "Section 498A Quashing of FIR",
+    "Narcotic Drugs ACT NDPS Search Procedure",
+    "Custodial Torture Suo Motu Jurisdiction",
+    "Land Acquisition Market Value Compensation",
+  ];
+
+  return (
+    <div className="lex-explorer-app">
+      {/* ── Navbar ── */}
+      <nav className="lex-nav">
+        <div className="nav-logo">
+          <span className="logo-emoji">⚖️</span>
+          <div className="logo-group">
+            <span className="logo-name">LexSearch</span>
+            <span className="logo-tag">Supreme Court Case Intelligence</span>
+          </div>
+        </div>
+        <div className="nav-actions">
+          {/* Search Mode Toggle */}
+          <div className="search-mode-toggle">
+            {(["semantic", "keyword", "hybrid"] as SearchMode[]).map((mode) => (
+              <button
+                key={mode}
+                className={`mode-btn ${searchMode === mode ? "active" : ""}`}
+                onClick={() => setSearchMode(mode)}
+                title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} search`}
+              >
+                {mode === "semantic" ? "🧠" : mode === "keyword" ? "🔤" : "🔀"}{" "}
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className={`nav-action-btn ${hasActiveFilters ? "active" : ""}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            🔧 Filters {hasActiveFilters ? "●" : ""}
+          </button>
+
+          <button
+            className={`nav-action-btn ${showBookmarks ? "active" : ""}`}
+            onClick={() => setShowBookmarks(!showBookmarks)}
+          >
+            🔖 Saved ({bookmarks.length})
