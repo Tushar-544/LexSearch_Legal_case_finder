@@ -81,3 +81,86 @@ function DetailItem({
       <strong>{label}:</strong> {value}
     </div>
   );
+}
+
+/* ── Mini Source Card inside chat ── */
+function ChatSourceCard({
+  src,
+  idx,
+  queryText,
+  onSummarize,
+}: {
+  src: Source;
+  idx: number;
+  queryText?: string;
+  onSummarize?: (text: string) => Promise<string>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [sumLoading, setSumLoading] = useState(false);
+  const conf = confidenceLabel(src.score);
+
+  const handleSummarize = async () => {
+    if (summary || !onSummarize) return;
+    setSumLoading(true);
+    try {
+      const s = await onSummarize(src.text);
+      setSummary(s);
+    } catch {
+      setSummary("Error generating summary.");
+    } finally {
+      setSumLoading(false);
+    }
+  };
+
+  const renderHighlighted = (text: string) => {
+    const parts = highlightText(text, queryText || "");
+    if (typeof parts === "string") return <>{parts}</>;
+    const words = (queryText || "")
+      .trim()
+      .split(/\s+/)
+      .filter((w) => w.length > 2);
+    if (words.length === 0) return <>{text}</>;
+    const regex = new RegExp(
+      `(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+      "gi"
+    );
+    return (
+      <>
+        {(parts as string[]).map((part, i) =>
+          regex.test(part) ? (
+            <mark key={i} className="kw-highlight">
+              {part}
+            </mark>
+          ) : (
+            <span key={i}>{part}</span>
+          )
+        )}
+      </>
+    );
+  };
+
+  // Build display title
+  const displayTitle =
+    src.case_title || src.case_no || src.case_id || "Case";
+
+  return (
+    <div className="chat-source-card">
+      <div className="card-top-header">
+        <span className="source-number">#{idx + 1}</span>
+        <div className="case-id-group">
+          <span className="case-no-pill">{src.case_no || src.case_id || "—"}</span>
+          {src.decision_date && (
+            <span className="case-year-label">
+              {src.decision_date.split("-").pop()}
+            </span>
+          )}
+        </div>
+        <div className="conf-score-group">
+          <span className={`conf-badge ${conf.cls}`}>{conf.label}</span>
+          <span className="relevance-score">
+            {(src.score * 100).toPrecision(3)}%
+          </span>
+        </div>
+      </div>
+
