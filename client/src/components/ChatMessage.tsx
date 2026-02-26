@@ -164,3 +164,86 @@ function ChatSourceCard({
         </div>
       </div>
 
+      {/* Case title */}
+      {src.case_title && (
+        <div className="case-title-line">
+          <strong>{src.case_title}</strong>
+        </div>
+      )}
+
+      {/* Structured details — only show non-null fields */}
+      <div className="card-details-grid">
+        <DetailItem label="Petitioner" value={src.petitioner} />
+        <DetailItem label="Respondent" value={src.respondent} />
+        <DetailItem label="Judge" value={src.judge} />
+        <DetailItem label="Date" value={src.decision_date} />
+      </div>
+
+      {/* Judgment excerpt — already cleaned by backend */}
+      <div className="judgment-box">
+        <div className={`judgment-text ${!expanded ? "clamped" : ""}`}>
+          {renderHighlighted(src.text)}
+        </div>
+        <div className="box-actions">
+          <button
+            className="expand-link-btn"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? "↑ Show less" : "↓ Read excerpt"}
+          </button>
+          {!summary && !sumLoading && (
+            <button
+              className="pill-btn summarizer-trigger"
+              onClick={handleSummarize}
+            >
+              ✨ Explain Simply
+            </button>
+          )}
+          {sumLoading && (
+            <span className="pulsing-text">Simplifying...</span>
+          )}
+        </div>
+      </div>
+
+      {summary && (
+        <div className="ai-summary-highlight">
+          <div className="summary-header">
+            <span className="ai-icon">✨</span> AI SIMPLIFIED
+          </div>
+          <p className="summary-body">{summary}</p>
+        </div>
+      )}
+
+      <div className="card-footer-buttons">
+        {src.pdf_url && (
+          <a
+            className="footer-btn brand-btn"
+            href={
+              src.pdf_url.startsWith("http")
+                ? src.pdf_url
+                : `https://main.sci.gov.in/${src.pdf_url}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            📂 Official PDF
+          </a>
+        )}
+        <a
+          className="footer-btn alt-btn"
+          href={getKanoonLink(src)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          🔍 Indian Kanoon
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main ChatMessage Component ── */
+export default function ChatMessage({
+  message,
+  onSuggestionClick,
+  onSummarize,
