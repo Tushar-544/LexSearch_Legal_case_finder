@@ -136,3 +136,72 @@ def _format_sources(chunks: list[dict]) -> list[dict]:
 
         sources.append(
             {
+                "case_id"      : cid,
+                "case_no"      : chunk.get("case_no"),
+                "case_title"   : case_title,
+                "petitioner"   : pet,
+                "respondent"   : res,
+                "judge"        : chunk.get("judge"),
+                "decision_date": chunk.get("decision_date"),
+                "year"         : chunk.get("year"),
+                "text"         : chunk.get("text", ""),
+                "pdf_url"      : chunk.get("pdf_url", ""),
+                "score"        : round(chunk.get("score", 0.0), 4),
+            }
+        )
+    return sources
+
+
+# ── Case Summary Generation ───────────────────────────────────────────────
+def _generate_case_summary(query: str, sources: list[dict]) -> str:
+    """Generate a meaningful 2-4 line summary explaining how the results
+    relate to the user's query."""
+    if not sources:
+        return ""
+
+    # Build a concise context from top sources
+    case_titles = []
+    for s in sources[:3]:
+        title = s.get("case_title", "")
+        date = s.get("decision_date", "")
+        judge = s.get("judge", "")
+        parts = [title]
+        if date:
+            parts.append(f"decided on {date}")
+        if judge:
+            parts.append(f"by {judge}")
+        case_titles.append(", ".join(parts))
+
+    cases_text = "; ".join(case_titles)
+    excerpts = " ".join(s.get("text", "")[:200] for s in sources[:2])
+
+    try:
+        prompt = (
+            f"Summarize in 2-3 sentences how these legal cases relate to "
+            f"the query '{query}'.\n\n"
+            f"Cases found: {cases_text}\n"
+            f"Key excerpts: {excerpts[:500]}\n\n"
+            f"Summary:"
+        )
+        summary = _generate(prompt)
+        if summary and len(summary) > 20:
+            return summary
+    except Exception as e:
+        log.warning(f"Case summary generation failed: {e}")
+
+    # Fallback: template-based summary
+    n = len(sources)
+    top = sources[0]
+    title = top.get("case_title", "a relevant case")
+    return (
+        f"Found {n} relevant case{'s' if n > 1 else ''} for your query "
+        f"'{query}'. The most relevant is {title}. "
+        f"These cases address legal issues closely related to your question."
+    )
+
+
+# ── Follow-up suggestions ──────────────────────────────────────────────────
+def _generate_followups(query: str, answer: str) -> list[str]:
+    """Generate 3 follow-up question suggestions based on the query and answer."""
+    try:
+        prompt = (
