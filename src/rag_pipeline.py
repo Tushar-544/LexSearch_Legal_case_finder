@@ -205,3 +205,72 @@ def _generate_followups(query: str, answer: str) -> list[str]:
     """Generate 3 follow-up question suggestions based on the query and answer."""
     try:
         prompt = (
+            f"Based on a legal question and its answer, generate exactly 3 "
+            f"follow-up questions a lawyer would want to ask next.\n\n"
+            f"Original question: {query}\n"
+            f"Answer summary: {answer[:500]}\n\n"
+            f"List 3 follow-up questions, one per line:"
+        )
+        raw = _generate(prompt)
+        lines = [
+            line.strip().lstrip("0123456789.-) ").strip()
+            for line in raw.split("\n")
+            if line.strip() and len(line.strip()) > 10
+        ]
+        return lines[:3] if lines else _fallback_followups(query)
+    except Exception as e:
+        log.warning(f"Follow-up generation failed: {e}")
+        return _fallback_followups(query)
+
+
+def _fallback_followups(query: str) -> list[str]:
+    """Generate rule-based follow-up suggestions when LLM fails."""
+    return [
+        f"What are the landmark cases related to this topic?",
+        f"What are the exceptions to this rule?",
+        f"How has the Supreme Court's stance evolved on this issue?",
+    ]
+
+
+# ── Key takeaways extraction ──────────────────────────────────────────────
+def _extract_key_points(answer: str) -> list[str]:
+    """Extract 3-5 key bullet points from the answer."""
+    try:
+        prompt = (
+            f"Extract 3 to 5 key legal takeaways from the following answer "
+            f"as short bullet points:\n\n{answer[:1000]}\n\nKey points:"
+        )
+        raw = _generate(prompt)
+        lines = [
+            line.strip().lstrip("0123456789.-•) ").strip()
+            for line in raw.split("\n")
+            if line.strip() and len(line.strip()) > 10
+        ]
+        return lines[:5] if lines else [answer[:200]]
+    except Exception as e:
+        log.warning(f"Key points extraction failed: {e}")
+        sentences = [s.strip() for s in answer.replace(".", ".\n").split("\n") if s.strip()]
+        return sentences[:3] if sentences else [answer[:200]]
+
+
+# ── Query rewriting ───────────────────────────────────────────────────────
+def _rewrite_query(query: str) -> str:
+    """Rewrite user query for better retrieval (expand, clarify, legalize)."""
+    try:
+        prompt = (
+            f"Rewrite the following legal query to make it more specific and "
+            f"suitable for semantic search across Indian Supreme Court judgments. "
+            f"Keep it concise.\n\n"
+            f"Original: {query}\nRewritten:"
+        )
+        rewritten = _generate(prompt).strip()
+        if rewritten and len(rewritten) > 10:
+            return rewritten
+        return query
+    except Exception:
+        return query
+
+
+class RAGPipeline:
+    """End-to-end RAG: retrieve → prompt → generate → return."""
+
