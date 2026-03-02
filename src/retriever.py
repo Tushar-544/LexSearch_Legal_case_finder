@@ -116,3 +116,61 @@ class Retriever:
         idx_dir = Path(index_dir)
         log.info(f"Loading FAISS index from {idx_dir} …")
         self.index    = faiss.read_index(str(idx_dir / "index.faiss"))
+        
+        # Prefer chunks.jsonl as it contains the 'text' field
+        chunks_path = Path("data/processed/chunks.jsonl")
+        if chunks_path.exists():
+            log.info(f"Loading metadata from {chunks_path} …")
+            self.metadata = _load_jsonl(chunks_path)
+        else:
+            log.warning(f"chunks.jsonl not found, falling back to {idx_dir / 'metadata.jsonl'}")
+            self.metadata = _load_jsonl(idx_dir / "metadata.jsonl")
+
+        log.info(f"Index: {self.index.ntotal:,} vectors | Metadata: {len(self.metadata):,} entries")
+
+        log.info(f"Loading embedding model: {model_name}")
+        self.model = SentenceTransformer(model_name)
+
+        # Load PDF summaries (optional)
+        self.summaries: dict[str, str] = {}
+        sp = Path(summaries_path)
+        if sp.exists():
+            for row in _load_jsonl(sp):
+                self.summaries[row["case_id"]] = row.get("summary", "")
+            log.info(f"Loaded {len(self.summaries):,} PDF summaries")
+        else:
+            log.warning(f"PDF summaries not found at {summaries_path}. Skipping.")
+
+    def _apply_filters(self, results: list[dict],
+                       filters: dict | None) -> list[dict]:
+        """Apply post-retrieval filters (year range, judge, etc.)."""
+        if not filters:
+            return results
+
+        filtered = results
+
+        # Year range filter
+        year_min = filters.get("yearMin")
+        year_max = filters.get("yearMax")
+        if year_min is not None or year_max is not None:
+            def year_match(meta: dict) -> bool:
+                y = meta.get("year")
+                if y is None:
+                    return True
+                try:
+                    y = int(y)
+                except (ValueError, TypeError):
+                    return True
+                if year_min is not None and y < int(year_min):
+                    return False
+                if year_max is not None and y > int(year_max):
+                    return False
+                return True
+            filtered = [r for r in filtered if year_match(r)]
+
+        # Judge filter
+        judge = filters.get("judge", "").strip()
+        if judge:
+            judge_lower = judge.lower()
+            filtered = [
+                r for r in filtered
