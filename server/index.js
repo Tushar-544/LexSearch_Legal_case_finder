@@ -1,4 +1,4 @@
-﻿/**
+/**
  * server/index.js
  * ─────────────────
  * Express backend — bridges the React frontend with the Python RAG pipeline.
@@ -107,3 +107,39 @@ app.post("/api/search", (req, res) => {
 app.post("/api/summarize", (req, res) => {
   const { text = "" } = req.body;
 
+  const py = spawn("python", ["src/run_summarize.py"], {
+    cwd: ROOT,
+    env: { ...process.env, PYTHONUNBUFFERED: "1" },
+  });
+
+  py.stdin.write(text);
+  py.stdin.end();
+
+  let stdout = "";
+  let stderr = "";
+
+  py.stdout.on("data", (d) => (stdout += d.toString()));
+  py.stderr.on("data", (d) => (stderr += d.toString()));
+
+  py.on("close", (code) => {
+    if (code !== 0) {
+      console.error("[Python stderr]", stderr);
+      return res.status(500).json({ error: "Summarization failed." });
+    }
+
+    try {
+      const result = JSON.parse(stdout);
+      return res.json(result);
+    } catch {
+      return res.status(500).json({ error: "Failed to parse summary output." });
+    }
+  });
+
+  py.on("error", (err) => {
+    res.status(500).json({ error: "Could not start Python process." });
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`\n✅  Legal Case Finder API running at http://localhost:${PORT}\n`);
+});
