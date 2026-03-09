@@ -354,3 +354,53 @@ export default function App() {
             onClick={() => setShowBookmarks(!showBookmarks)}
           >
             🔖 Saved ({bookmarks.length})
+          </button>
+
+          {allSources.length >= 2 && (
+            <button
+              className="nav-action-btn"
+              onClick={() => {
+                setComparisonCases(allSources.slice(0, 4));
+                setShowComparison(true);
+              }}
+            >
+              ⚖️ Compare
+            </button>
+          )}
+
+          {allSources.length > 0 && (
+            <button
+              className="nav-action-btn"
+              onClick={() => setShowTimeline(true)}
+            >
+              📅 Timeline
+            </button>
+          )}
+
+          <ExportButton sources={allSources} query={currentQuery} />
+          <VoiceSearchButton onResult={handleVoiceResult} />
+        </div>
+      </nav>
+
+      {/* ── Filters Panel ── */}
+      {showFilters && (
+        <div className="panel-overlay" onClick={() => setShowFilters(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <FiltersPanel
+              filters={filters}
+              onChange={setFilters}
+              onClose={() => setShowFilters(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Bookmarks Sidebar ── */}
+      {showBookmarks && (
+        <div className="bookmarks-panel">
+          <div className="bookmarks-header">
+            <h3>🔖 Saved Cases</h3>
+            <button
+              className="close-panel-btn"
+              onClick={() => setShowBookmarks(false)}
+            >
