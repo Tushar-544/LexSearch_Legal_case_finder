@@ -174,3 +174,62 @@ class Retriever:
             judge_lower = judge.lower()
             filtered = [
                 r for r in filtered
+                if judge_lower in str(r.get("judge", "")).lower()
+            ]
+
+        # Minimum relevance threshold
+        min_score = filters.get("minScore")
+        if min_score is not None:
+            try:
+                threshold = float(min_score)
+                filtered = [r for r in filtered if r.get("score", 0) >= threshold]
+            except (ValueError, TypeError):
+                pass
+
+        return filtered
+
+    def search_cases(self, query: str, k: int = 5,
+                     filters: dict | None = None) -> list[dict]:
+        """
+        Search for the top-k case chunks most relevant to `query`.
+        When filters are provided, over-fetches and then filters down.
+
+        Returns a list of result dicts with keys:
+            chunk_id, doc_id, case_id, text, score,
+            petitioner, respondent, judge, decision_date,
+            year, pdf_url, pdf_summary (if available)
+        """
+        if not query.strip():
+            return []
+
+        # Over-fetch when filters are active to compensate for filtering
+        fetch_k = k * 3 if filters else k
+
+        q_emb = self.model.encode(
+            [query],
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+        ).astype(np.float32)
+
+        scores, indices = self.index.search(q_emb, fetch_k)
+        results = []
+        for score, idx in zip(scores[0], indices[0]):
+            if idx < 0 or idx >= len(self.metadata):
+                continue
+            meta = self.metadata[idx].copy()
+            meta["score"] = float(score)
+
+            # Attach PDF summary if available
+            cid = meta.get("case_id", "")
+            meta["pdf_summary"] = self.summaries.get(cid, "")
+
+            # ── Normalise metadata (clean fields, handle IN RE, strip text prefix)
+            meta = _normalise_meta(meta)
+
+            results.append(meta)
+
+        # Apply filters and trim to k
+        results = self._apply_filters(results, filters)
+        return results[:k]
+
+    def keyword_search(self, query: str, k: int = 5,
