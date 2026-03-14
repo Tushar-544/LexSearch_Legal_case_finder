@@ -404,3 +404,54 @@ export default function App() {
               className="close-panel-btn"
               onClick={() => setShowBookmarks(false)}
             >
+              ✕
+            </button>
+          </div>
+          {bookmarks.length === 0 ? (
+            <p className="bookmarks-empty">
+              No saved cases yet. Click the bookmark icon on any case to save it.
+            </p>
+          ) : (
+            <div className="bookmarks-list">
+              {bookmarks.map((bm) => (
+                <div key={bm.case_id} className="bookmark-item">
+                  <div className="bookmark-info">
+                    <strong>{bm.case_no || bm.case_id}</strong>
+                    <span>
+                      {bm.petitioner} vs {bm.respondent}
+                    </span>
+                    <span className="bm-date">{bm.decision_date}</span>
+                  </div>
+                  <button
+                    className="bm-remove-btn"
+                    onClick={() => toggleBookmark(bm)}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Comparison View ── */}
+      {showComparison && (
+        <ComparisonView
+          cases={comparisonCases}
+          onClose={() => setShowComparison(false)}
+        />
+      )}
+
+      {/* ── Timeline View ── */}
+      {showTimeline && (
+        <TimelineView
+          sources={allSources}
+          onClose={() => setShowTimeline(false)}
+        />
+      )}
+
+      {/* ── Hero Section (shown only when no messages) ── */}
+      {messages.length === 0 && (
+        <header className="lex-hero">
+          <h1 className="hero-heading">
