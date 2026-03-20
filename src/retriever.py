@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/retriever.py
 ────────────────
 Loads the FAISS index and metadata, encodes a query,
@@ -233,3 +233,62 @@ class Retriever:
         return results[:k]
 
     def keyword_search(self, query: str, k: int = 5,
+                       filters: dict | None = None) -> list[dict]:
+        """Simple keyword-based search across metadata text fields."""
+        if not query.strip():
+            return []
+
+        query_lower = query.lower()
+        keywords = query_lower.split()
+        scored = []
+
+        for i, meta in enumerate(self.metadata):
+            text = str(meta.get("text", "")).lower()
+            petitioner = str(meta.get("petitioner", "")).lower()
+            respondent = str(meta.get("respondent", "")).lower()
+            combined = f"{text} {petitioner} {respondent}"
+
+            hits = sum(1 for kw in keywords if kw in combined)
+            if hits > 0:
+                entry = meta.copy()
+                entry["score"] = hits / len(keywords)
+                cid = entry.get("case_id", "")
+                entry["pdf_summary"] = self.summaries.get(cid, "")
+                entry = _normalise_meta(entry)
+                scored.append(entry)
+
+        scored.sort(key=lambda x: x["score"], reverse=True)
+        scored = self._apply_filters(scored, filters)
+        return scored[:k]
+
+    def hybrid_search(self, query: str, k: int = 5,
+                      filters: dict | None = None) -> list[dict]:
+        """Combine semantic and keyword search with reciprocal rank fusion."""
+        semantic = self.search_cases(query, k=k*2, filters=filters)
+        keyword = self.keyword_search(query, k=k*2, filters=filters)
+
+        rrf_scores: dict[str, float] = {}
+        rrf_meta: dict[str, dict] = {}
+
+        rrf_k = 60
+
+        for rank, result in enumerate(semantic):
+            cid = result.get("case_id", str(rank))
+            rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (rrf_k + rank + 1)
+            if cid not in rrf_meta:
+                rrf_meta[cid] = result
+
+        for rank, result in enumerate(keyword):
+            cid = result.get("case_id", str(rank))
+            rrf_scores[cid] = rrf_scores.get(cid, 0) + 1.0 / (rrf_k + rank + 1)
+            if cid not in rrf_meta:
+                rrf_meta[cid] = result
+
+        ranked = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+        results = []
+        for cid, score in ranked[:k]:
+            entry = rrf_meta[cid].copy()
+            entry["score"] = score
+            results.append(entry)
+
+        return results

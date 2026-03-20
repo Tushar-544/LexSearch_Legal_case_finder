@@ -1,4 +1,4 @@
-﻿/* client/src/index.css — Premium LexSearch Styles */
+/* client/src/index.css — Premium LexSearch Styles */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
@@ -1284,4 +1284,121 @@ h1, h2, h3, .logo-name {
   justify-content: center;
   padding: 40px;
   animation: fadeIn 0.2s ease;
+}
+
+.timeline-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 600px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.timeline-header h3 {
+  color: var(--accent);
+}
+
+.timeline-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.timeline-track {
+  overflow-y: auto;
+  flex: 1;
+  padding: 24px;
+}
+
+.timeline-year-block {
+  position: relative;
+  padding-left: 32px;
+  margin-bottom: 28px;
+}
+
+.timeline-year-block::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: -28px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent), rgba(212, 175, 55, 0.1));
+}
+
+.timeline-year-block:last-child::before {
+  bottom: 0;
+}
+
+.timeline-year-badge {
+  background: var(--accent);
+  color: black;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 4px 14px;
+  border-radius: 100px;
+  display: inline-block;
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.timeline-year-badge::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+
+.timeline-year-cases {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-case-pill {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: var(--transition);
+}
+
+.timeline-case-pill:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.timeline-case-pill strong {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.timeline-case-pill span {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.tl-judge {
+  font-style: italic;
+  opacity: 0.6;
 }

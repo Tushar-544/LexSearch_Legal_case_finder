@@ -1,4 +1,4 @@
-﻿/**
+/**
  * client/src/App.tsx
  * ──────────────────
  * Legal Case Finder — React UI
@@ -455,3 +455,54 @@ export default function App() {
       {messages.length === 0 && (
         <header className="lex-hero">
           <h1 className="hero-heading">
+            Find relevant legal precedents <span>instantly.</span>
+          </h1>
+          <p className="hero-subheading">
+            AI-driven semantic search across 47,000+ Supreme Court judgments.
+          </p>
+
+          <div className="hero-features">
+            <div className="hero-feature-pill">💬 Chat Interface</div>
+            <div className="hero-feature-pill">🔧 Smart Filters</div>
+            <div className="hero-feature-pill">📌 Key Takeaways</div>
+            <div className="hero-feature-pill">🔖 Bookmarks</div>
+            <div className="hero-feature-pill">⚖️ Case Compare</div>
+            <div className="hero-feature-pill">📅 Timeline</div>
+            <div className="hero-feature-pill">🎙️ Voice Search</div>
+            <div className="hero-feature-pill">📥 Export</div>
+          </div>
+
+          <div className="search-suggestion-bar">
+            <span className="sugg-label">Try searching for:</span>
+            <div className="sugg-list">
+              {suggestionCases.map((caseName) => (
+                <button
+                  key={caseName}
+                  className="sugg-tag"
+                  onClick={() => handleSearch(caseName)}
+                >
+                  {caseName}
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
+      )}
+
+      {/* ── Chat Window ── */}
+      <ChatWindow
+        messages={messages}
+        loading={loading}
+        onSend={handleSearch}
+        onSuggestionClick={handleSearch}
+        onSummarize={handleSummarize}
+        currentQuery={currentQuery}
+      />
+
+      {/* ── Footer ── */}
+      <footer className="lex-footer-area">
+        <p>© 2026 LexSearch AI — Built for the Indian Legal Community</p>
+      </footer>
+    </div>
+  );
+}

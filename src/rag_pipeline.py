@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/rag_pipeline.py
 ───────────────────
 Retrieves relevant case chunks and generates an LLM answer.
@@ -274,3 +274,72 @@ def _rewrite_query(query: str) -> str:
 class RAGPipeline:
     """End-to-end RAG: retrieve → prompt → generate → return."""
 
+    def __init__(self, retriever: Retriever | None = None, k: int = 5) -> None:
+        self.retriever = retriever or Retriever()
+        self.k = k
+
+    def answer(self, query: str, filters: dict | None = None,
+               enable_rewrite: bool = False) -> dict[str, Any]:
+        """
+        Run the full RAG pipeline.
+
+        Returns:
+            {
+                "query"       : str,
+                "answer"      : str,
+                "sources"     : list[dict],
+                "suggestions" : list[str],
+                "key_points"  : list[str],
+                "summary"     : str,
+            }
+        """
+        if not query.strip():
+            return {
+                "query": query, "answer": "Please enter a valid query.",
+                "sources": [], "suggestions": [], "key_points": [],
+                "summary": "",
+            }
+
+        # Optional query rewriting
+        effective_query = query
+        if enable_rewrite:
+            effective_query = _rewrite_query(query)
+            log.info(f"Query rewritten: '{query}' → '{effective_query}'")
+
+        chunks = self.retriever.search_cases(effective_query, k=self.k,
+                                              filters=filters)
+        if not chunks:
+            return {
+                "query"       : query,
+                "answer"      : "Not enough information.",
+                "sources"     : [],
+                "suggestions" : _fallback_followups(query),
+                "key_points"  : [],
+                "summary"     : "",
+            }
+
+        prompt = _build_prompt(effective_query, chunks)
+        log.debug(f"Prompt length: {len(prompt)} chars")
+
+        answer = _generate(prompt)
+        sources = _format_sources(chunks)
+
+        # Generate enriched response fields
+        suggestions = _generate_followups(query, answer)
+        key_points = _extract_key_points(answer)
+        summary = _generate_case_summary(query, sources)
+
+        return {
+            "query"       : query,
+            "answer"      : answer,
+            "sources"     : sources,
+            "suggestions" : suggestions,
+            "key_points"  : key_points,
+            "summary"     : summary,
+        }
+
+    def summarize(self, text: str) -> str:
+        """Generate a concise summary of a given piece of text."""
+        if not text.strip():
+            return ""
+        return _summarize_text(text)

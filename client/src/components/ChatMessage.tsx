@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ChatMessage.tsx
  * ───────────────
  * Renders a single chat bubble — user or AI.
@@ -247,3 +247,86 @@ export default function ChatMessage({
   message,
   onSuggestionClick,
   onSummarize,
+  queryText,
+}: ChatMessageProps) {
+  const isUser = message.role === "user";
+  const time = new Date(message.timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return (
+    <div className={`chat-message ${isUser ? "chat-user" : "chat-ai"}`}>
+      <div className="chat-avatar">{isUser ? "👤" : "⚖️"}</div>
+      <div className="chat-bubble-wrapper">
+        <div className="chat-bubble">
+          {/* AI Summary (new — meaningful overview) */}
+          {!isUser && message.summary && (
+            <div className="chat-summary-block">
+              <div className="summary-block-header">📋 Case Summary</div>
+              <p className="summary-block-body">{message.summary}</p>
+            </div>
+          )}
+
+          {/* Key Points */}
+          {!isUser &&
+            message.key_points &&
+            message.key_points.length > 0 && (
+              <div className="chat-key-points">
+                <div className="kp-header">📌 Key Takeaways</div>
+                <ul>
+                  {message.key_points.map((kp, i) => (
+                    <li key={i}>{kp}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+          {/* Main content */}
+          <div className="chat-content">{message.content}</div>
+
+          {/* Sources */}
+          {!isUser &&
+            message.sources &&
+            message.sources.length > 0 && (
+              <div className="chat-sources">
+                <div className="chat-sources-header">
+                  📑 {message.sources.length} Matching Precedents
+                </div>
+                <div className="chat-sources-grid">
+                  {message.sources.map((src, i) => (
+                    <ChatSourceCard
+                      key={i}
+                      idx={i}
+                      src={src}
+                      queryText={queryText}
+                      onSummarize={onSummarize}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+          {/* Follow-up Suggestions */}
+          {!isUser &&
+            message.suggestions &&
+            message.suggestions.length > 0 && (
+              <div className="chat-suggestions">
+                <span className="sugg-label-inline">Follow up →</span>
+                {message.suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    className="sugg-tag"
+                    onClick={() => onSuggestionClick?.(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+        </div>
+        <span className="chat-time">{time}</span>
+      </div>
+    </div>
+  );
+}
